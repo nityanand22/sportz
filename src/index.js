@@ -17,8 +17,6 @@ async function main() {
       throw new Error("Failed to create user");
     }
 
-    console.log("✅ CREATE: New user created:", newUser);
-
     // READ: Select the user
     const foundUser = await db
       .select()
