@@ -12,7 +12,7 @@ export const matchesRouter = Router();
 matchesRouter.get("/", async (req, res) => {
   const parsed = listMatchesQuerySchema.safeParse(req.query);
   if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.errors });
+    return res.status(400).json({ error: parsed.error.issues });
   }
   const limit = Math.min(parsed.data.limit ?? 20, 50);
   try {
@@ -30,7 +30,7 @@ matchesRouter.get("/", async (req, res) => {
 matchesRouter.post("/", async (req, res) => {
   const parsed = createMatchSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.errors });
+    return res.status(400).json({ error: parsed.error.issues });
   }
   const { startTime, endTime, homeScore, awayScore } = parsed.data;
   try {
