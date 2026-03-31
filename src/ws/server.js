@@ -26,7 +26,6 @@ export function attachWebSocketServer(server) {
     });
     sendJson(socket, {
       type: "welcome",
-      message: "Welcome to the WebSocket server!",
     });
 
     socket.on("error", console.error);
