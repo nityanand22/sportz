@@ -13,7 +13,7 @@ const server = http.createServer(app);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(securityMiddleware);
+app.use(securityMiddleware());
 
 app.use("/matches", matchesRouter);
 

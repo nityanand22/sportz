@@ -15,30 +15,48 @@ function broadcast(clients, payload) {
 
 export function attachWebSocketServer(server) {
   const wss = new WebSocketServer({
-    server,
+    noServer: true,
     path: "/ws",
     maxPayload: 1024 * 1024,
   });
 
-  wss.on("connection", async (socket, req) => {
+  server.on("upgrade", async (request, socket, head) => {
+    if (request.url !== "/ws") {
+      socket.write("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+
     if (wsArcjet) {
       try {
-        const decision = await wsArcjet.protect(req);
+        const decision = await wsArcjet.protect(request);
         if (decision.isDenied()) {
-          const code = decision.reason.isRateLimit() ? 1013 : 1008;
-          const reason = decision.reason.isRateLimit()
-            ? "Rate limit exceeded"
-            : "Access Denied";
-          socket.close(code, reason);
+          const code = decision.reason.isRateLimit() ? 429 : 403;
+          const message = decision.reason.isRateLimit()
+            ? "Too Many Requests"
+            : "Forbidden";
+          socket.write(
+            `HTTP/1.1 ${code} ${message}\r\nConnection: close\r\n\r\n`,
+          );
+          socket.destroy();
           return;
         }
       } catch (error) {
-        console.log(error);
-        socket.close(1011, "Server Security Error");
+        console.error("Arcjet WS error:", error);
+        socket.write(
+          "HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n",
+        );
+        socket.destroy();
         return;
       }
     }
 
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit("connection", ws, request);
+    });
+  });
+
+  wss.on("connection", (socket, req) => {
     socket.isAlive = true;
     socket.on("pong", () => {
       socket.isAlive = true;
