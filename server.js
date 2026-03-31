@@ -2,7 +2,7 @@ import express from "express";
 import { matchesRouter } from "./src/routes/matches.js";
 import http from "http";
 import { attachWebSocketServer } from "./src/ws/server.js";
-import { log } from "console";
+import { securityMiddleware } from "./src/arcjet.js";
 
 const app = express();
 
@@ -13,6 +13,7 @@ const server = http.createServer(app);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(securityMiddleware);
 
 app.use("/matches", matchesRouter);
 
