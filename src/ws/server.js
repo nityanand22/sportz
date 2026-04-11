@@ -48,6 +48,7 @@ function handleMessage(socket, data) {
     message = JSON.parse(data.toString());
   } catch (error) {
     sendJson(socket, { type: "error", error: "Invalid message format" });
+    return;
   }
 
   if (message?.type === "subscribe" && Number.isInteger(message.matchId)) {
@@ -125,14 +126,15 @@ export function attachWebSocketServer(server) {
       type: "welcome",
     });
     socket.on("message", (data) => handleMessage(socket, data));
-    socket.on("error", () => {
+    socket.on("error", (error) => {
+      console.error("WebSocket error:", error);
       socket.terminate();
     });
     socket.on("close", () => {
       cleanupSubscriptions(socket);
     });
 
-    socket.on("error", console.error);
+    // socket.on("error", console.error); // Removed duplicate
   });
   const interval = setInterval(() => {
     wss.clients.forEach((socket) => {
@@ -149,11 +151,11 @@ export function attachWebSocketServer(server) {
   });
 
   function broadcastMatchCreated(match) {
-    broadcastToAll(wss, { type: "matchCreated", match });
+    broadcastToAll(wss.clients, { type: "matchCreated", match });
   }
 
-  function broadcastCommentry(matchId, commentary) {
-    broadcastToMatch(matchId, { type: "commentaryCreated", data: comment });
+  function broadcastCommentary(matchId, commentary) {
+    broadcastToMatch(matchId, { type: "commentaryCreated", data: commentary });
   }
-  return { broadcastMatchCreated, broadcastCommentry };
+  return { broadcastMatchCreated, broadcastCommentary };
 }

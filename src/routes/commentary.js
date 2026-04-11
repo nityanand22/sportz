@@ -7,6 +7,7 @@ import {
   listCommentaryQuerySchema,
   createCommentarySchema,
 } from "../validation/commentary.js";
+import { ZodError } from "zod";
 
 export const commentaryRouter = Router({ mergeParams: true });
 
@@ -25,7 +26,7 @@ commentaryRouter.get("/", async (req, res) => {
 
     return res.status(200).json({ data: commentaryList });
   } catch (error) {
-    if (error?.name === "ZodError") {
+    if (error instanceof ZodError) {
       console.error("Validation error:", error);
       return res.status(400).json({ error: error.errors });
     }
@@ -51,7 +52,7 @@ commentaryRouter.post("/", async (req, res) => {
 
     return res.status(201).json({ data: newCommentary });
   } catch (error) {
-    if (error?.name === "ZodError") {
+    if (error instanceof ZodError) {
       console.error("Validation error:", error);
       return res.status(400).json({ error: error.errors });
     }
